@@ -150,13 +150,14 @@ class solve_main():
     #       vtype="B"))
 
     #   self.model.addCons(self.G[t_+1] <= self.G[t_] + 1)
-    #   self.model.addCons(self.G[t_+1] <= 1 - quicksum(self.x[i][0][t_] \
-    #                                                       for i in self.C))
-    #   self.model.addCons(self.G[t_+1] >= (self.G[t_] + 1) - self.M_stn_dyn * \
-    #                                 (1 - self.dummy_vars[f"stn_dem_dyn"][-1]))
-    #   self.model.addCons(self.G[t_+1] >= 1 - quicksum(self.x[i][0][t_] \
-    #                                       for i in self.C) - self.M_stn_dyn * \
-    #                                         self.dummy_vars[f"stn_dem_dyn"][-1])
+    #   self.model.addCons(self.G[t_+1] <= self.M_stn_dyn*(1 - quicksum(\
+    #                                       self.x[i][0][t_+1] for i in self.C)))
+    #   self.model.addCons(self.G[t_+1] >= (self.G[t_] + 1) - (4*self.M_stn_dyn*\
+    #                                 (1 - self.dummy_vars[f"stn_dem_dyn"][-1])))
+    #   self.model.addCons(self.G[t_+1] >= self.M_stn_dyn*(1 - quicksum(\
+    #                                     self.x[i][0][t_+1] for i in self.C)) \
+    #                                                   - ((4*self.M_stn_dyn) * \
+    #                                       self.dummy_vars[f"stn_dem_dyn"][-1]))
 
     ######### station demand dynamics canstraints #########
 
@@ -167,7 +168,7 @@ class solve_main():
 
     self.dummy_vars[f"demand_update"] = {}
     self.dummy_vars[f"demand_update"]["min_1_sum"] = []
-    self.dummy_vars[f"demand_update"]["min_d(t-1)+inc_(1-min)"] = []
+    self.dummy_vars[f"demand_update"]["min_d(t)+inc_(1-min)"] = []
     for i_ in self.V_not_C:
       self.model.addCons(self.D[i_][0] == (self.D_j_0[i_]) * \
                        (1 - quicksum(self.x_hat[i_][k__][0] for k__ in self.A)))
@@ -189,14 +190,14 @@ class solve_main():
                                                                            <= 1)
 
         self.model.addCons(self.dummy_vars[f"demand_update"]["min_1_sum"][-1] <=
-                           quicksum(self.x[i_][k__][t_] for k__ in self.A)) 
+                           quicksum(self.x[i_][k__][t_+1] for k__ in self.A)) 
 
         self.model.addCons(self.dummy_vars[f"demand_update"]["min_1_sum"][-1] \
           >= (1 - (2*self.M_obj*(1 - \
             self.dummy_vars[f"demand_update"]["min_1_sum"][-2]))))
 
         self.model.addCons(self.dummy_vars[f"demand_update"]["min_1_sum"][-1] \
-          >= (quicksum(self.x[i_][k__][t_] for k__ in self.A) - \
+          >= (quicksum(self.x[i_][k__][t_+1] for k__ in self.A) - \
           (2*self.M_obj*(self.dummy_vars[f"demand_update"]["min_1_sum"][-2]))))
 
         # self.model.addCons(self.D[i_][t_] >= 0)
@@ -204,25 +205,25 @@ class solve_main():
         # MILP and Big-M method to implement non-linear dynamics 
         # D(t+1) = (D(t) + inc(t)) * (1- m) as 
         # D(t+1) = min( (D(t) + inc(t)) , (1- m) )
-        self.dummy_vars[f"demand_update"]["min_d(t-1)+inc_(1-min)"].append(\
+        self.dummy_vars[f"demand_update"]["min_d(t)+inc_(1-min)"].append(\
           self.model.addVar(name=\
-          f"dummy_var_dem_{len(self.dummy_vars[f'demand_update']['min_d(t-1)+inc_(1-min)'])}", vtype="B"))
+          f"dummy_var_dem_{len(self.dummy_vars[f'demand_update']['min_d(t)+inc_(1-min)'])}", vtype="B"))
         
         self.model.addCons(self.D[i_][t_+1] <= (self.D[i_][t_] + \
-          self.f_i(i_, t_)))
+          self.f_i(i_, t_+1)))
 
 
         self.model.addCons(self.D[i_][t_+1] <= self.M_obj * (1 - \
           self.dummy_vars[f"demand_update"]["min_1_sum"][-1]))
 
         self.model.addCons(self.D[i_][t_+1] >= ((self.D[i_][t_] + \
-        self.f_i(i_, t_))) - ((2*self.M_obj) * \
-        (1 - self.dummy_vars[f"demand_update"]["min_d(t-1)+inc_(1-min)"][-1])))
+        self.f_i(i_, t_+1))) - ((2*self.M_obj) * \
+        (1 - self.dummy_vars[f"demand_update"]["min_d(t)+inc_(1-min)"][-1])))
 
         self.model.addCons(self.D[i_][t_+1] >= (self.M_obj * \
           (1 - self.dummy_vars[f"demand_update"]["min_1_sum"][-1])) - \
           ((2*self.M_obj) * \
-          self.dummy_vars[f"demand_update"]["min_d(t-1)+inc_(1-min)"][-1]))
+          self.dummy_vars[f"demand_update"]["min_d(t)+inc_(1-min)"][-1]))
 
           # == (self.D[i_][t_-1] + \
         	# self.f_i(i_, t_)) * (1 - self.dummy_vars[f"demand_update"][-1]))
