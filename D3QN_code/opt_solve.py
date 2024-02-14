@@ -151,11 +151,11 @@ class solve_main():
 
     #   self.model.addCons(self.G[t_+1] <= self.G[t_] + 1)
     #   self.model.addCons(self.G[t_+1] <= self.M_stn_dyn*(1 - quicksum(\
-    #                                       self.x[i][0][t_+1] for i in self.C)))
+    #                                       self.x[i][0][t_] for i in self.C)))
     #   self.model.addCons(self.G[t_+1] >= (self.G[t_] + 1) - (4*self.M_stn_dyn*\
     #                                 (1 - self.dummy_vars[f"stn_dem_dyn"][-1])))
     #   self.model.addCons(self.G[t_+1] >= self.M_stn_dyn*(1 - quicksum(\
-    #                                     self.x[i][0][t_+1] for i in self.C)) \
+    #                                     self.x[i][0][t_] for i in self.C)) \
     #                                                   - ((4*self.M_stn_dyn) * \
     #                                       self.dummy_vars[f"stn_dem_dyn"][-1]))
 
@@ -190,14 +190,14 @@ class solve_main():
                                                                            <= 1)
 
         self.model.addCons(self.dummy_vars[f"demand_update"]["min_1_sum"][-1] <=
-                           quicksum(self.x[i_][k__][t_+1] for k__ in self.A)) 
+                           quicksum(self.x[i_][k__][t_] for k__ in self.A)) 
 
         self.model.addCons(self.dummy_vars[f"demand_update"]["min_1_sum"][-1] \
           >= (1 - (2*self.M_obj*(1 - \
             self.dummy_vars[f"demand_update"]["min_1_sum"][-2]))))
 
         self.model.addCons(self.dummy_vars[f"demand_update"]["min_1_sum"][-1] \
-          >= (quicksum(self.x[i_][k__][t_+1] for k__ in self.A) - \
+          >= (quicksum(self.x[i_][k__][t_] for k__ in self.A) - \
           (2*self.M_obj*(self.dummy_vars[f"demand_update"]["min_1_sum"][-2]))))
 
         # self.model.addCons(self.D[i_][t_] >= 0)
@@ -217,7 +217,7 @@ class solve_main():
           self.dummy_vars[f"demand_update"]["min_1_sum"][-1]))
 
         self.model.addCons(self.D[i_][t_+1] >= ((self.D[i_][t_] + \
-        self.f_i(i_, t_+1))) - ((2*self.M_obj) * \
+        self.f_i(i_, t_))) - ((2*self.M_obj) * \
         (1 - self.dummy_vars[f"demand_update"]["min_d(t)+inc_(1-min)"][-1])))
 
         self.model.addCons(self.D[i_][t_+1] >= (self.M_obj * \
